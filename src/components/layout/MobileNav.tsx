@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, LucideHome, BarChart3, Trophy, BookOpen, Compass, Users } from "lucide-react";
+import { Menu, X, LucideHome, BarChart3, Trophy, BookOpen, Compass, Users, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -12,9 +12,9 @@ export function MobileNav() {
   const navItems = [
     { path: "/", name: "Home", icon: LucideHome },
     { path: "/courses", name: "Courses", icon: BookOpen },
+    { path: "/roadmap", name: "Roadmaps", icon: Map },
     { path: "/skill-graph", name: "Skill Graph", icon: BarChart3 },
     { path: "/leaderboard", name: "Leaderboard", icon: Trophy },
-    { path: "/roadmap", name: "Roadmap", icon: Compass },
     { path: "/hackbuddies", name: "HackBuddies", icon: Users },
   ];
 

@@ -59,3 +59,29 @@ export interface Question {
   options: string[];
   correctAnswerIndex: number;
 }
+
+export interface Roadmap {
+  id: string;
+  title: string;
+  description: string;
+  milestones: Milestone[];
+  totalHours: number;
+  progress: number;
+  isAIGenerated: boolean;
+}
+
+export interface Milestone {
+  id: number;
+  title: string;
+  description: string;
+  resources: Resource[];
+  timeEstimate: string;
+  completed: boolean;
+}
+
+export interface SkillArea {
+  name: string;
+  value: number;
+  fullMark: number;
+}
+

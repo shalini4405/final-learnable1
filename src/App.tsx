@@ -10,6 +10,7 @@ import CoursesPage from "./pages/CoursesPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import HackBuddiesPage from "./pages/HackBuddiesPage";
 import SkillGraphPage from "./pages/SkillGraphPage";
+import RoadmapPage from "./pages/RoadmapPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route element={<AppLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/courses" element={<CoursesPage />} />
+            <Route path="/roadmap" element={<RoadmapPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
             <Route path="/hackbuddies" element={<HackBuddiesPage />} />
             <Route path="/skill-graph" element={<SkillGraphPage />} />
