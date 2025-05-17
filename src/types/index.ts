@@ -45,6 +45,7 @@ export interface Resource {
   title: string;
   type: "video" | "article" | "documentation";
   url: string;
+  content?: string;
 }
 
 export interface Quiz {
@@ -54,10 +55,12 @@ export interface Quiz {
 }
 
 export interface Question {
-  id: string;
-  text: string;
+  id: string | number;
+  text?: string;
+  question?: string;
   options: string[];
-  correctAnswerIndex: number;
+  correctAnswerIndex?: number;
+  correctAnswer?: number;
 }
 
 export interface Roadmap {
@@ -84,4 +87,3 @@ export interface SkillArea {
   value: number;
   fullMark: number;
 }
-
