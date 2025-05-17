@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,10 +28,11 @@ const ProfilePage = () => {
     name: "",
     email: "",
     bio: "",
+    avatar: "",
   });
   
   // Mock badges
-  const [badges, setBadges] = useState<Badge[]>([
+  const [badges] = useState<Badge[]>([
     {
       id: "badge-1",
       title: "React Master",
@@ -54,6 +56,7 @@ const ProfilePage = () => {
         name: user.name || "",
         email: user.email || "",
         bio: user.bio || "Web developer passionate about learning new technologies",
+        avatar: user.avatar || "",
       });
     }
   }, [user]);
@@ -69,11 +72,11 @@ const ProfilePage = () => {
     e.preventDefault();
     
     if (user) {
-      // Update user information
+      // Update user information without sending the bio property to updateUser
       updateUser({
         name: formData.name,
         email: formData.email,
-        bio: formData.bio
+        avatar: formData.avatar
       });
       
       setIsEditing(false);
@@ -149,6 +152,26 @@ const ProfilePage = () => {
                 {isEditing ? (
                   <CardContent className="pt-6">
                     <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="space-y-4">
+                        <div className="flex justify-center mb-4">
+                          <Avatar className="h-24 w-24">
+                            <AvatarImage src={formData.avatar || user.avatar} />
+                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="avatar">Profile Picture URL</Label>
+                          <Input
+                            id="avatar"
+                            name="avatar"
+                            placeholder="https://example.com/your-image.jpg"
+                            value={formData.avatar || ""}
+                            onChange={handleChange}
+                          />
+                        </div>
+                      </div>
+                      
                       <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
                         <Input
