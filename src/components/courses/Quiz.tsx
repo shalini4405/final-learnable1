@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { quiz } from "lucide-react";
+import { FileText } from "lucide-react";
 import { 
   Card, 
   CardContent, 
@@ -83,7 +83,7 @@ const Quiz = ({ courseId, lessonId, questions, onComplete }: QuizProps) => {
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <quiz className="h-5 w-5" />
+            <FileText className="h-5 w-5" />
             Quiz Results
           </CardTitle>
           <CardDescription>You've completed the quiz!</CardDescription>
@@ -109,7 +109,7 @@ const Quiz = ({ courseId, lessonId, questions, onComplete }: QuizProps) => {
     <Card className="mt-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <quiz className="h-5 w-5" />
+          <FileText className="h-5 w-5" />
           Lesson Quiz
         </CardTitle>
         <CardDescription>
