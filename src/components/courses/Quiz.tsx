@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { FileText } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FileText, Award } from "lucide-react";
 import { 
   Card, 
   CardContent, 
@@ -11,7 +11,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
+import SkillBadge from "./SkillBadge";
 
 export interface QuizQuestion {
   id: number;
@@ -32,6 +34,31 @@ const Quiz = ({ courseId, lessonId, questions, onComplete }: QuizProps) => {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [score, setScore] = useState(0);
+  const [showBadge, setShowBadge] = useState(false);
+  const [courseName, setCourseName] = useState("Web Development");
+
+  // Check if quiz was already completed
+  useEffect(() => {
+    const completed = localStorage.getItem(`course_${courseId}_lesson_${lessonId}_quiz`);
+    const savedScore = localStorage.getItem(`course_${courseId}_lesson_${lessonId}_score`);
+    
+    if (completed === "completed" && savedScore) {
+      setQuizCompleted(true);
+      setScore(parseInt(savedScore));
+    }
+    
+    // Mock course name (in a real app, you'd fetch this from a database)
+    switch (courseId) {
+      case "react":
+        setCourseName("React Fundamentals");
+        break;
+      case "js":
+        setCourseName("JavaScript Essentials");
+        break;
+      default:
+        setCourseName("Web Development");
+    }
+  }, [courseId, lessonId]);
 
   const handleAnswerSelect = (answerIndex: number) => {
     setSelectedAnswers({
@@ -61,6 +88,33 @@ const Quiz = ({ courseId, lessonId, questions, onComplete }: QuizProps) => {
       localStorage.setItem(`course_${courseId}_lesson_${lessonId}_quiz`, "completed");
       localStorage.setItem(`course_${courseId}_lesson_${lessonId}_score`, finalScore.toString());
       
+      // Add course completion to localStorage if this is the last lesson
+      // This is a mock implementation - in a real app, you'd check if this is the final lesson
+      const isLastLesson = lessonId === 5; // Mock assumption
+      if (isLastLesson && finalScore >= 70) {
+        const completedCourses = JSON.parse(localStorage.getItem("completedCourses") || "[]");
+        
+        // Check if course already completed
+        if (!completedCourses.includes(courseId)) {
+          completedCourses.push(courseId);
+          localStorage.setItem("completedCourses", JSON.stringify(completedCourses));
+          
+          // Save badge information
+          const badges = JSON.parse(localStorage.getItem("earnedBadges") || "[]");
+          badges.push({
+            id: `badge-${courseId}`,
+            courseId: courseId,
+            courseName: courseName,
+            completionDate: new Date().toISOString(),
+            score: finalScore
+          });
+          localStorage.setItem("earnedBadges", JSON.stringify(badges));
+          
+          // Show badge
+          setShowBadge(true);
+        }
+      }
+      
       toast({
         title: "Quiz completed!",
         description: `You scored ${finalScore}%`
@@ -72,10 +126,36 @@ const Quiz = ({ courseId, lessonId, questions, onComplete }: QuizProps) => {
     setCurrentQuestion(0);
     setSelectedAnswers({});
     setQuizCompleted(false);
+    setShowBadge(false);
   };
 
   if (questions.length === 0) {
     return <div>No quiz questions available</div>;
+  }
+
+  // Show the skill badge if earned
+  if (showBadge) {
+    return (
+      <div className="mt-6 space-y-6">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold mb-2">Congratulations!</h2>
+          <p className="text-gray-600">
+            You've earned a skill badge for completing this course with a score of {score}%
+          </p>
+        </div>
+        
+        <SkillBadge
+          courseId={courseId}
+          courseName={courseName}
+          completionDate={new Date()}
+          score={score}
+        />
+        
+        <div className="flex justify-center mt-6">
+          <Button variant="outline" onClick={handleRetake}>Retake Quiz</Button>
+        </div>
+      </div>
+    );
   }
 
   if (quizCompleted) {
@@ -96,8 +176,21 @@ const Quiz = ({ courseId, lessonId, questions, onComplete }: QuizProps) => {
             </p>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-between">
           <Button onClick={handleRetake} variant="outline">Retake Quiz</Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline">
+                  <Award className="h-4 w-4 mr-2" />
+                  View Certificate
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Complete all lessons to earn your certificate</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </CardFooter>
       </Card>
     );
