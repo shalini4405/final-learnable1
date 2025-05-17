@@ -1,18 +1,30 @@
-import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, Clock, Target } from "lucide-react";
+import { Calendar, Clock, Target, CheckCircle } from "lucide-react";
 import { Course } from "@/types";
 
 interface CourseProgressProps {
   course: Course;
 }
 
-const CourseProgress = ({ course }: CourseProgressProps) => {
+const CourseProgress: React.FC<CourseProgressProps> = ({ course }) => {
+  const [progress, setProgress] = useState(0);
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [daysLeft, setDaysLeft] = useState<number>(0);
   const [todayMinutes, setTodayMinutes] = useState<number>(0);
 
   useEffect(() => {
+    // Load progress data from localStorage
+    const savedProgress = localStorage.getItem(`course_${course.id}_progress`);
+    const savedTimeSpent = localStorage.getItem(`course_${course.id}_total_time`);
+    const savedCompletedLessons = localStorage.getItem(`course_${course.id}_completed_lessons`);
+
+    if (savedProgress) setProgress(parseInt(savedProgress));
+    if (savedTimeSpent) setTimeSpent(parseInt(savedTimeSpent));
+    if (savedCompletedLessons) setCompletedLessons(JSON.parse(savedCompletedLessons));
+
     if (course.endDate) {
       const end = new Date(course.endDate);
       const now = new Date();
@@ -27,6 +39,9 @@ const CourseProgress = ({ course }: CourseProgressProps) => {
     setTodayMinutes(todayProgress?.minutesSpent || 0);
   }, [course]);
 
+  // Calculate estimated time remaining
+  const estimatedTimeRemaining = Math.max(0, course.totalHours * 60 - timeSpent);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -36,38 +51,45 @@ const CourseProgress = ({ course }: CourseProgressProps) => {
   };
 
   return (
-    <Card className="p-4 space-y-4">
-      <div className="space-y-2">
-        <h3 className="font-semibold text-lg">Course Timeline</h3>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Calendar className="w-4 h-4" />
-          <span>
-            {course.startDate && formatDate(course.startDate)} - {course.endDate && formatDate(course.endDate)}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Clock className="w-4 h-4" />
-          <span>{daysLeft} days remaining</span>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <h3 className="font-semibold text-lg">Daily Target</h3>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Target className="w-4 h-4" />
-          <span>{course.dailyTargetMinutes} minutes per day</span>
-        </div>
-        <div className="space-y-1">
-          <div className="flex justify-between text-sm">
-            <span>Today's Progress</span>
-            <span>{todayMinutes} / {course.dailyTargetMinutes} min</span>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Course Progress</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <div className="flex justify-between text-sm mb-2">
+            <span>Overall Progress</span>
+            <span>{progress}%</span>
           </div>
-          <Progress 
-            value={(todayMinutes / (course.dailyTargetMinutes || 1)) * 100} 
-            className="h-2"
-          />
+          <Progress value={progress} className="h-2" />
         </div>
-      </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <span>Completed Lessons</span>
+            </div>
+            <span>{completedLessons.length}</span>
+          </div>
+
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-500" />
+              <span>Time Remaining</span>
+            </div>
+            <span>
+              {Math.floor(estimatedTimeRemaining / 60)}h {estimatedTimeRemaining % 60}m
+            </span>
+          </div>
+        </div>
+
+        {progress === 100 && (
+          <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">
+            🎉 Congratulations! You've completed this course.
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 };

@@ -7,6 +7,7 @@ export interface Course {
   icon: string;
   progress?: number;
   totalHours?: number;
+  totalLessons: number;
   completedHours?: number;
   isRecommended?: boolean;
   isCustom?: boolean;
@@ -131,5 +132,28 @@ export interface CareerPath {
   description: string;
   requiredCourses: string[];
   averageSalary: string;
+  skills: string[];
+}
+
+export interface CertificateCourse {
+  id: string;
+  title: string;
+  provider: {
+    name: string;
+    type: 'university' | 'company';
+    logo: string;
+  };
+  description: string;
+  duration: string;
+  level: "Beginner" | "Intermediate" | "Advanced";
+  certificateUrl?: string;
+  enrollmentUrl: string;
+  topics: string[];
+  rating: number;
+  totalEnrolled: number;
+  isFree: boolean;
+  startDate?: string;
+  language: string;
+  prerequisites?: string[];
   skills: string[];
 }

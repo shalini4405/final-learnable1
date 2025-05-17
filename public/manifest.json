@@ -1,0 +1,16 @@
+{
+  "name": "Learnable",
+  "short_name": "Learnable",
+  "description": "Your Interactive Learning Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6E59A5",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "32x32",
+      "type": "image/svg+xml"
+    }
+  ]
+} 

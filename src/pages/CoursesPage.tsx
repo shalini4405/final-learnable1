@@ -14,6 +14,32 @@ import FreeCertifications from "@/components/courses/FreeCertifications";
 import TimeManagement from "@/components/courses/TimeManagement";
 import { CareerPathsAndResources } from "@/components/courses/CareerPathsAndResources";
 import { useUser } from "@/contexts/UserContext";
+import CertificateCourses from "@/components/courses/CertificateCourses";
+import FreeCertificateCourses from "@/components/courses/FreeCertificateCourses";
+import CustomCourseRequest from "@/components/courses/CustomCourseRequest";
+import InteractiveRoadmap from "@/components/InteractiveRoadmap";
+import { useToast } from "@/components/ui/use-toast";
+
+interface RoadmapNode {
+  id: number;
+  x: number;
+  y: number;
+  title: string;
+  status: 'completed' | 'available' | 'locked';
+  type: 'milestone' | 'challenge' | 'quiz';
+}
+
+interface GeneratedRoadmap {
+  title: string;
+  description: string;
+  milestones: Array<{
+    id: number;
+    title: string;
+    description: string;
+    resources: Array<{ title: string; type: string; url: string }>;
+    timeEstimate: string;
+  }>;
+}
 
 // Sample lesson content data for the different difficulty levels
 const courseContentData = {
@@ -1587,182 +1613,152 @@ const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentTab, setCurrentTab] = useState("for-you");
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  
+  const [generatedRoadmap, setGeneratedRoadmap] = useState<GeneratedRoadmap | null>(null);
+  const { user } = useUser();
+  const { toast } = useToast();
+
   const filteredCourses = courses.filter(course => 
     course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     course.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getCoursesByTab = (): Course[] => {
-    switch(currentTab) {
-      case "beginner":
-        return filteredCourses.filter(course => course.level === "Beginner");
-      case "intermediate":
-        return filteredCourses.filter(course => course.level === "Intermediate");
-      case "advanced":
-        return filteredCourses.filter(course => course.level === "Advanced");
-      case "life-sciences":
-        return filteredCourses.filter(course => course.id.startsWith("ls"));
-      case "mathematics":
-        return filteredCourses.filter(course => course.id.startsWith("m"));
-      case "business":
-        return filteredCourses.filter(course => course.id.startsWith("b"));
-      case "speaking":
-        return filteredCourses.filter(course => course.id.startsWith("ps"));
-      case "for-you":
-      default:
-        return filteredCourses;
-    }
-  };
-
-  const getCourseCategory = (courseId: string): "business" | "science" | "mathematics" | "speaking" => {
+  const getCourseCategory = (courseId: string) => {
     if (courseId.startsWith("b")) return "business";
     if (courseId.startsWith("ls")) return "science";
     if (courseId.startsWith("m")) return "mathematics";
-    if (courseId.startsWith("ps")) return "speaking";
-    return "business"; // default fallback
+    return "speaking"; // default fallback
   };
 
   const handleBackToList = () => {
     setSelectedCourse(null);
   };
   
+  const roadmapNodes: RoadmapNode[] = [
+    {
+      id: 1,
+      x: 100,
+      y: 100,
+      title: "Getting Started",
+      status: "completed",
+      type: "milestone"
+    },
+    {
+      id: 2,
+      x: 250,
+      y: 200,
+      title: "Basic Concepts",
+      status: "available",
+      type: "challenge"
+    },
+    {
+      id: 3,
+      x: 400,
+      y: 150,
+      title: "First Project",
+      status: "locked",
+      type: "milestone"
+    },
+    {
+      id: 4,
+      x: 550,
+      y: 250,
+      title: "Knowledge Check",
+      status: "locked",
+      type: "quiz"
+    },
+    {
+      id: 5,
+      x: 700,
+      y: 150,
+      title: "Advanced Topics",
+      status: "locked",
+      type: "milestone"
+    }
+  ];
+
+  const handleNodeClick = (node: RoadmapNode) => {
+    if (node.status === 'locked') return;
+    
+    toast({
+      title: `${node.title}`,
+      description: `Starting ${node.type}: ${node.title}`,
+    });
+  };
+
+  const handleCustomRoadmapComplete = (roadmap: GeneratedRoadmap) => {
+    setGeneratedRoadmap(roadmap);
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Courses</h1>
         <p className="text-gray-600 mt-2">
-          Explore our diverse range of courses in business, public speaking, life sciences, and mathematics.
+          Learn at your own pace with our interactive courses and earn certificates
         </p>
       </div>
       
-      {selectedCourse ? (
-        <div className="space-y-6">
-          <Button 
-            variant="outline" 
-            onClick={handleBackToList} 
-            className="mb-4"
-          >
-            ← Back to Course List
-          </Button>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="flex items-center justify-center w-12 h-12 rounded bg-primary/10 text-primary font-medium">
-                  {selectedCourse.shortCode}
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold">{selectedCourse.title}</h2>
-                  <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm ${
-                    selectedCourse.level === "Beginner" 
-                      ? "bg-green-100 text-green-800" 
-                      : selectedCourse.level === "Intermediate"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                  }`}>
-                    {selectedCourse.level}
-                  </span>
-                </div>
-              </div>
+      <Tabs defaultValue="my-courses">
+        <TabsList>
+          <TabsTrigger value="my-courses">My Courses</TabsTrigger>
+          <TabsTrigger value="certificates">Free Certificates</TabsTrigger>
+          <TabsTrigger value="generate">Generate New</TabsTrigger>
+          <TabsTrigger value="interactive">Interactive View</TabsTrigger>
+        </TabsList>
 
+        <TabsContent value="my-courses" className="space-y-6">
+          {selectedCourse ? (
+            <div className="grid gap-6 lg:grid-cols-2">
               <CourseContent course={selectedCourse} />
+              <div className="space-y-6">
+                <CourseProgress course={selectedCourse} />
+                <TimeManagement course={selectedCourse} />
+                <CareerPathsAndResources 
+                  course={selectedCourse} 
+                  category={getCourseCategory(selectedCourse.id)} 
+                />
+              </div>
             </div>
-            
-            <div className="space-y-6">
-              <CourseProgress course={selectedCourse} />
-              <TimeManagement course={selectedCourse} />
-              <CareerPathsAndResources 
-                course={selectedCourse}
-                category={getCourseCategory(selectedCourse.id)}
-              />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <Tabs 
-              defaultValue="for-you" 
-              value={currentTab}
-              onValueChange={setCurrentTab}
-              className="w-full sm:w-auto"
-            >
-              <TabsList>
-                <TabsTrigger value="for-you">For You</TabsTrigger>
-                <TabsTrigger value="business">Business</TabsTrigger>
-                <TabsTrigger value="speaking">Public Speaking</TabsTrigger>
-                <TabsTrigger value="life-sciences">Life Sciences</TabsTrigger>
-                <TabsTrigger value="mathematics">Mathematics</TabsTrigger>
-                <TabsTrigger value="beginner">Beginner</TabsTrigger>
-                <TabsTrigger value="intermediate">Intermediate</TabsTrigger>
-                <TabsTrigger value="advanced">Advanced</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search courses..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {getCoursesByTab().map((course) => (
-              <Card 
-                key={course.id}
-                className="bg-white hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => setSelectedCourse(course)}
-              >
-                <CardHeader className="pb-2">
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="flex items-center justify-center w-12 h-12 rounded bg-primary/10 text-primary font-medium">
-                      {course.shortCode}
-                    </div>
-                    <span className={`skill-level-badge ${course.level.toLowerCase()}`}>
-                      {course.level}
-                    </span>
-                  </div>
-                  <CardTitle>{course.title}</CardTitle>
-                  <CardDescription className="mt-2">{course.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Progress</span>
-                      <span className="font-medium">{course.progress}%</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-primary" 
-                        style={{ width: `${course.progress}%` }}
-                      ></div>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {course.totalHours} hours
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          {getCoursesByTab().length === 0 && (
+          ) : (
             <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-700">No courses found</h3>
-              <p className="text-gray-500">Try adjusting your search or filters</p>
+              <p className="text-lg text-gray-600">Select a course to start learning</p>
             </div>
           )}
+        </TabsContent>
 
-          <div className="mt-12 pt-12 border-t">
-            <FreeCertifications />
-          </div>
-        </>
-      )}
+        <TabsContent value="certificates" className="space-y-6">
+          <FreeCertificateCourses />
+        </TabsContent>
+
+        <TabsContent value="generate" className="space-y-6">
+          <CustomCourseRequest onRequestComplete={handleCustomRoadmapComplete} />
+        </TabsContent>
+
+        <TabsContent value="interactive" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Interactive Learning Path</CardTitle>
+              <CardDescription>
+                Follow your personalized learning journey through interactive milestones
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <InteractiveRoadmap
+                nodes={roadmapNodes}
+                onNodeClick={handleNodeClick}
+                currentProgress={30}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {generatedRoadmap && (
+          <TabsContent value="view" className="space-y-6">
+            {/* Existing generated roadmap content */}
+            // ... existing code ...
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 };
