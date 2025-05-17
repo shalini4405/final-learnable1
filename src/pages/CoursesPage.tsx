@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { courses } from "@/data/mockData";
 import { Course } from "@/types";
 import LessonContent from "@/components/courses/LessonContent";
 import { toast } from "@/hooks/use-toast";
+import SkillBadge from "@/components/courses/SkillBadge";
 
 // Sample lesson content data for the different difficulty levels
 const courseContentData = {
@@ -32,12 +34,12 @@ const courseContentData = {
       resources: [
         {
           title: "Design Fundamentals Video",
-          type: "video",
+          type: "video" as const,
           content: "<p>This comprehensive video walks through the basic principles of design with visual examples.</p>"
         },
         {
           title: "Elements of Design",
-          type: "article",
+          type: "article" as const,
           content: "<p>An in-depth exploration of how different design elements work together to create meaningful experiences.</p>"
         }
       ],
@@ -181,12 +183,12 @@ const courseContentData = {
       resources: [
         {
           title: "Interactive Color Wheel",
-          type: "documentation",
+          type: "documentation" as const,
           content: "<p>Explore color relationships and create harmonious color schemes with this interactive tool.</p>"
         },
         {
           title: "Color Psychology in Design",
-          type: "article",
+          type: "article" as const,
           content: "<p>Learn how different colors affect human psychology and how to use this knowledge in your designs.</p>"
         }
       ],
@@ -328,12 +330,12 @@ const courseContentData = {
       resources: [
         {
           title: "Typography in Design Systems",
-          type: "article",
+          type: "article" as const,
           content: "<p>An exploration of how to build consistent and scalable typography systems for digital products.</p>"
         },
         {
           title: "Font Pairing Guide",
-          type: "documentation",
+          type: "documentation" as const,
           content: "<p>Learn the art of combining different fonts to create harmonious and effective designs.</p>"
         }
       ],
@@ -483,12 +485,12 @@ const courseContentData = {
       resources: [
         {
           title: "UI Pattern Libraries",
-          type: "documentation",
+          type: "documentation" as const,
           content: "<p>A comprehensive collection of UI patterns with examples and implementation guidelines.</p>"
         },
         {
           title: "When to Break UI Conventions",
-          type: "article",
+          type: "article" as const,
           content: "<p>An exploration of when it's appropriate to deviate from established UI patterns.</p>"
         }
       ],
@@ -635,12 +637,12 @@ const courseContentData = {
       resources: [
         {
           title: "Responsive Design Testing Tools",
-          type: "documentation",
+          type: "documentation" as const,
           content: "<p>A collection of tools for testing responsive designs across different devices and screen sizes.</p>"
         },
         {
           title: "Beyond Media Queries: Modern Responsive Design",
-          type: "article",
+          type: "article" as const,
           content: "<p>Exploring newer CSS features like CSS Grid, Flexbox, and container queries for responsive layouts.</p>"
         }
       ],
@@ -787,12 +789,12 @@ const courseContentData = {
       resources: [
         {
           title: "Card Sorting for IA Research",
-          type: "article",
+          type: "article" as const,
           content: "<p>A guide to conducting card sorting exercises to inform your information architecture decisions.</p>"
         },
         {
           title: "IA Visualization Techniques",
-          type: "video",
+          type: "video" as const,
           content: "<p>Learn various methods for visualizing information architecture, including sitemaps, wireflows, and concept models.</p>"
         }
       ],
@@ -943,12 +945,12 @@ const courseContentData = {
       resources: [
         {
           title: "Famous Design Systems Analysis",
-          type: "article",
+          type: "article" as const,
           content: "<p>A deep dive into successful design systems like Google's Material Design, IBM's Carbon, and Airbnb's Design System.</p>"
         },
         {
           title: "Building a Design System from Scratch",
-          type: "documentation",
+          type: "documentation" as const,
           content: "<p>A comprehensive guide to creating, implementing, and maintaining a design system for your organization.</p>"
         }
       ],
@@ -1099,12 +1101,12 @@ const courseContentData = {
       resources: [
         {
           title: "Microinteractions: Designing with Details",
-          type: "video",
+          type: "video" as const,
           content: "<p>A detailed walkthrough of how to design effective microinteractions that enhance usability and delight.</p>"
         },
         {
           title: "Animation Principles for UX",
-          type: "article",
+          type: "article" as const,
           content: "<p>How to apply traditional animation principles to create meaningful motion in digital interfaces.</p>"
         }
       ],
@@ -1255,12 +1257,12 @@ const courseContentData = {
       resources: [
         {
           title: "Designing for Screen Readers",
-          type: "documentation",
+          type: "documentation" as const,
           content: "<p>A practical guide to ensuring your designs work well with screen readers and other assistive technologies.</p>"
         },
         {
           title: "Color Contrast in UI Design",
-          type: "video",
+          type: "video" as const,
           content: "<p>Learn how to create visually appealing designs that maintain sufficient color contrast for accessibility.</p>"
         }
       ],
@@ -1383,6 +1385,7 @@ const courseContentData = {
 const CourseContent = ({ course }: { course: Course }) => {
   const [selectedLesson, setSelectedLesson] = useState<number | null>(null);
   const [totalTimeSpent, setTotalTimeSpent] = useState<number>(0);
+  const [showBadge, setShowBadge] = useState<boolean>(false);
   
   // Get content based on course level
   const getLessonContent = () => {
@@ -1396,6 +1399,9 @@ const CourseContent = ({ course }: { course: Course }) => {
   };
   
   const lessons = getLessonContent();
+  const allLessonsCompleted = lessons.every(lesson => 
+    localStorage.getItem(`course_${course.id}_lesson_${lesson.id}_quiz`) === "completed"
+  );
 
   useEffect(() => {
     // Load total time spent on this course from localStorage
@@ -1403,7 +1409,15 @@ const CourseContent = ({ course }: { course: Course }) => {
     if (savedTotalTime) {
       setTotalTimeSpent(parseInt(savedTotalTime));
     }
-  }, [course.id]);
+    
+    // Check if course is completed to show badge
+    if (allLessonsCompleted) {
+      const badgeShown = localStorage.getItem(`course_${course.id}_badge_shown`);
+      if (!badgeShown) {
+        setShowBadge(true);
+      }
+    }
+  }, [course.id, allLessonsCompleted]);
   
   const handleLessonSelect = (lessonId: number) => {
     setSelectedLesson(lessonId);
@@ -1420,9 +1434,33 @@ const CourseContent = ({ course }: { course: Course }) => {
     setTotalTimeSpent(newTotalTime);
     localStorage.setItem(`course_${course.id}_total_time`, newTotalTime.toString());
   };
+  
+  const handleBadgeClose = () => {
+    setShowBadge(false);
+    localStorage.setItem(`course_${course.id}_badge_shown`, "true");
+  };
 
   return (
     <div className="space-y-6">
+      {showBadge && allLessonsCompleted && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="max-w-md w-full">
+            <SkillBadge 
+              courseId={course.id}
+              courseName={course.title}
+              completionDate={new Date()}
+              score={90}
+            />
+            <Button 
+              onClick={handleBadgeClose}
+              className="w-full mt-4"
+            >
+              Continue Learning
+            </Button>
+          </div>
+        </div>
+      )}
+      
       <div className="bg-primary/5 p-4 rounded-lg">
         <h3 className="text-lg font-medium">Course Overview</h3>
         <p className="mt-2">{course.description}</p>
