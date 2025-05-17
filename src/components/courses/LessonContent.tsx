@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { file-text, book-open, file-video } from "lucide-react";
+import { FileText, BookOpen, FileVideo } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import TimeTracker from "./TimeTracker";
 import Quiz, { QuizQuestion } from "./Quiz";
@@ -53,13 +53,13 @@ const LessonContent = ({
   const getIconForResourceType = (type: "video" | "article" | "documentation") => {
     switch (type) {
       case "video":
-        return <file-video className="h-5 w-5 text-blue-500" />;
+        return <FileVideo className="h-5 w-5 text-blue-500" />;
       case "article":
-        return <file-text className="h-5 w-5 text-green-500" />;
+        return <FileText className="h-5 w-5 text-green-500" />;
       case "documentation":
-        return <book-open className="h-5 w-5 text-purple-500" />;
+        return <BookOpen className="h-5 w-5 text-purple-500" />;
       default:
-        return <file-text className="h-5 w-5" />;
+        return <FileText className="h-5 w-5" />;
     }
   };
 
@@ -102,7 +102,7 @@ const LessonContent = ({
         <div className="bg-green-50 p-4 rounded-lg border border-green-200">
           <div className="flex items-start gap-3">
             <div className="bg-green-100 p-2 rounded-full">
-              <quiz className="h-5 w-5 text-green-600" />
+              <FileText className="h-5 w-5 text-green-600" />
             </div>
             <div>
               <h3 className="font-medium">Quiz Completed</h3>
