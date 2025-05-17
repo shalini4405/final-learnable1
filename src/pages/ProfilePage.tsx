@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Award } from "lucide-react";
+import { Award, Camera } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import StreakPointsCard from "@/components/user/StreakPointsCard";
 import { useUser } from "@/contexts/UserContext";
@@ -24,12 +24,13 @@ const ProfilePage = () => {
   const { user, updateUser } = useUser();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     bio: "",
-    avatar: "",
   });
+  const [previewImage, setPreviewImage] = useState<string | undefined>(undefined);
   
   // Mock badges
   const [badges] = useState<Badge[]>([
@@ -56,8 +57,8 @@ const ProfilePage = () => {
         name: user.name || "",
         email: user.email || "",
         bio: user.bio || "Web developer passionate about learning new technologies",
-        avatar: user.avatar || "",
       });
+      setPreviewImage(user.avatar);
     }
   }, [user]);
   
@@ -68,15 +69,32 @@ const ProfilePage = () => {
     });
   };
   
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Create a preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (user) {
-      // Update user information without sending the bio property to updateUser
       updateUser({
         name: formData.name,
         email: formData.email,
-        avatar: formData.avatar
+        avatar: previewImage,
+        bio: formData.bio
       });
       
       setIsEditing(false);
@@ -113,10 +131,12 @@ const ProfilePage = () => {
         <div className="md:col-span-1">
           <Card>
             <CardHeader className="text-center">
-              <Avatar className="w-24 h-24 mx-auto">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-              </Avatar>
+              <div className="relative w-24 h-24 mx-auto">
+                <Avatar className="w-24 h-24 mx-auto">
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+              </div>
               <CardTitle className="mt-2">{user.name}</CardTitle>
               <CardDescription>{user.email}</CardDescription>
             </CardHeader>
@@ -154,22 +174,31 @@ const ProfilePage = () => {
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="space-y-4">
                         <div className="flex justify-center mb-4">
-                          <Avatar className="h-24 w-24">
-                            <AvatarImage src={formData.avatar || user.avatar} />
-                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="avatar">Profile Picture URL</Label>
-                          <Input
-                            id="avatar"
-                            name="avatar"
-                            placeholder="https://example.com/your-image.jpg"
-                            value={formData.avatar || ""}
-                            onChange={handleChange}
+                          <div className="relative group">
+                            <Avatar className="h-24 w-24 cursor-pointer group-hover:opacity-75 transition-opacity">
+                              <AvatarImage src={previewImage} alt={user.name} />
+                              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div 
+                              className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              onClick={triggerFileInput}
+                            >
+                              <div className="bg-black/30 rounded-full p-2">
+                                <Camera className="h-6 w-6 text-white" />
+                              </div>
+                            </div>
+                          </div>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFileSelect}
                           />
                         </div>
+                        <p className="text-xs text-center text-muted-foreground">
+                          Click on the avatar to upload a profile picture
+                        </p>
                       </div>
                       
                       <div className="space-y-2">
