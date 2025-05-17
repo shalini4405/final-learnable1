@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Award } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import StreakPointsCard from "@/components/user/StreakPointsCard";
 
 interface UserProfile {
   id: string;
@@ -15,6 +15,8 @@ interface UserProfile {
   email: string;
   bio: string;
   avatar: string;
+  points: number;
+  streak: number;
   isLoggedIn: boolean;
 }
 
@@ -61,7 +63,9 @@ const ProfilePage = () => {
       setUser({
         ...parsedUser,
         bio: parsedUser.bio || "Web developer passionate about learning new technologies",
-        avatar: parsedUser.avatar || "/placeholder.svg"
+        avatar: parsedUser.avatar || "/placeholder.svg",
+        points: parsedUser.points || 45,
+        streak: parsedUser.streak || 3
       });
       setFormData({
         name: parsedUser.name || "",
@@ -135,6 +139,10 @@ const ProfilePage = () => {
               <div>
                 <h4 className="text-sm font-medium mb-1">Bio</h4>
                 <p className="text-sm text-gray-600">{user.bio}</p>
+              </div>
+              
+              <div className="py-2">
+                <StreakPointsCard points={user.points} streak={user.streak} compact={true} />
               </div>
               
               {!isEditing && (

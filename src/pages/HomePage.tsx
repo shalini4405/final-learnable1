@@ -2,7 +2,8 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { courses } from "@/data/mockData";
+import { courses, currentUser } from "@/data/mockData";
+import StreakPointsCard from "@/components/user/StreakPointsCard";
 
 const HomePage = () => {
   const featuredCourses = courses.filter(course => course.isRecommended).slice(0, 3);
@@ -10,11 +11,21 @@ const HomePage = () => {
   return (
     <div className="space-y-8">
       <section className="space-y-4">
-        <h1 className="text-3xl font-bold">Welcome to SkillSprint</h1>
-        <p className="text-gray-600 max-w-3xl">
-          Accelerate your growth with interactive courses, skill tracking, and a
-          supportive community. Learn, practice, and compete on your journey to mastery.
-        </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Welcome to SkillSprint</h1>
+            <p className="text-gray-600 max-w-3xl">
+              Accelerate your growth with interactive courses, skill tracking, and a
+              supportive community. Learn, practice, and compete on your journey to mastery.
+            </p>
+          </div>
+          
+          {currentUser && (
+            <div className="flex-shrink-0">
+              <StreakPointsCard points={currentUser.points} streak={currentUser.streak} />
+            </div>
+          )}
+        </div>
         <div className="flex gap-4 pt-2">
           <Button asChild>
             <Link to="/courses">Explore Courses</Link>

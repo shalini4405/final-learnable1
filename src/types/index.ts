@@ -17,6 +17,8 @@ export interface User {
   name: string;
   email: string;
   points: number;
+  streak: number;
+  lastActive: string;
   coursesEnrolled: string[];
   completedLevels: string[];
 }

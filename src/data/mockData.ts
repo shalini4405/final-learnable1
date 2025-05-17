@@ -76,6 +76,8 @@ export const currentUser: User = {
   name: "John Doe",
   email: "john@example.com",
   points: 45,
+  streak: 3,
+  lastActive: new Date().toISOString(),
   coursesEnrolled: ["1", "3"],
   completedLevels: ["1-1"]
 };
@@ -86,6 +88,8 @@ export const topUsers: User[] = [
     name: "Jane Smith",
     email: "jane@example.com",
     points: 320,
+    streak: 14,
+    lastActive: new Date().toISOString(),
     coursesEnrolled: ["1", "2", "4"],
     completedLevels: ["1-1", "1-2", "1-3", "2-1", "2-2", "4-1"]
   },
@@ -94,6 +98,8 @@ export const topUsers: User[] = [
     name: "Bob Johnson",
     email: "bob@example.com",
     points: 280,
+    streak: 7,
+    lastActive: new Date().toISOString(),
     coursesEnrolled: ["1", "3", "5"],
     completedLevels: ["1-1", "1-2", "3-1", "3-2", "5-1"]
   },
@@ -102,6 +108,8 @@ export const topUsers: User[] = [
     name: "Alice Williams",
     email: "alice@example.com",
     points: 240,
+    streak: 5,
+    lastActive: new Date().toISOString(),
     coursesEnrolled: ["2", "4", "6"],
     completedLevels: ["2-1", "2-2", "4-1", "6-1"]
   },
@@ -110,6 +118,8 @@ export const topUsers: User[] = [
     name: "Charlie Brown",
     email: "charlie@example.com",
     points: 210,
+    streak: 2,
+    lastActive: new Date().toISOString(),
     coursesEnrolled: ["1", "2", "3"],
     completedLevels: ["1-1", "2-1", "3-1"]
   },
@@ -118,6 +128,8 @@ export const topUsers: User[] = [
     name: "John Doe",
     email: "john@example.com",
     points: 45,
+    streak: 3,
+    lastActive: new Date().toISOString(),
     coursesEnrolled: ["1", "3"],
     completedLevels: ["1-1"]
   }
