@@ -8,17 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Award } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import StreakPointsCard from "@/components/user/StreakPointsCard";
-
-interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  bio: string;
-  avatar: string;
-  points: number;
-  streak: number;
-  isLoggedIn: boolean;
-}
+import { useUser } from "@/contexts/UserContext";
+import { useNavigate } from "react-router-dom";
 
 interface Badge {
   id: string;
@@ -29,7 +20,8 @@ interface Badge {
 }
 
 const ProfilePage = () => {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const { user, updateUser } = useUser();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -55,25 +47,16 @@ const ProfilePage = () => {
     }
   ]);
   
-  // Load user data from localStorage on component mount
+  // Load user data when component mounts
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser({
-        ...parsedUser,
-        bio: parsedUser.bio || "Web developer passionate about learning new technologies",
-        avatar: parsedUser.avatar || "/placeholder.svg",
-        points: parsedUser.points || 45,
-        streak: parsedUser.streak || 3
-      });
+    if (user) {
       setFormData({
-        name: parsedUser.name || "",
-        email: parsedUser.email || "",
-        bio: parsedUser.bio || "Web developer passionate about learning new technologies",
+        name: user.name || "",
+        email: user.email || "",
+        bio: user.bio || "Web developer passionate about learning new technologies",
       });
     }
-  }, []);
+  }, [user]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -87,17 +70,12 @@ const ProfilePage = () => {
     
     if (user) {
       // Update user information
-      const updatedUser = {
-        ...user,
+      updateUser({
         name: formData.name,
         email: formData.email,
         bio: formData.bio
-      };
+      });
       
-      // Save to localStorage
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      
-      setUser(updatedUser);
       setIsEditing(false);
       
       toast({
@@ -113,6 +91,10 @@ const ProfilePage = () => {
   };
   
   if (!user) {
+    useEffect(() => {
+      navigate("/login");
+    }, []);
+    
     return (
       <div className="flex justify-center items-center h-80">
         <p>Please log in to view your profile.</p>
@@ -138,7 +120,7 @@ const ProfilePage = () => {
             <CardContent className="space-y-4">
               <div>
                 <h4 className="text-sm font-medium mb-1">Bio</h4>
-                <p className="text-sm text-gray-600">{user.bio}</p>
+                <p className="text-sm text-muted-foreground">{formData.bio}</p>
               </div>
               
               <div className="py-2">
@@ -223,7 +205,7 @@ const ProfilePage = () => {
                       </div>
                       <div>
                         <dt className="text-sm font-medium">Bio</dt>
-                        <dd className="text-gray-700 mt-1">{user.bio}</dd>
+                        <dd className="text-gray-700 mt-1">{formData.bio}</dd>
                       </div>
                     </dl>
                   </CardContent>
@@ -241,8 +223,8 @@ const ProfilePage = () => {
                       </div>
                       <div>
                         <h3 className="font-medium">{badge.title}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{badge.description}</p>
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className="text-sm text-muted-foreground mt-1">{badge.description}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
                           Earned on {formatDate(badge.earnedOn)}
                         </p>
                       </div>
@@ -257,7 +239,7 @@ const ProfilePage = () => {
                 <CardContent className="pt-6">
                   <div className="text-center py-8">
                     <h3 className="text-lg font-medium">No courses enrolled yet</h3>
-                    <p className="text-gray-600 mt-2">
+                    <p className="text-muted-foreground mt-2">
                       Start learning by enrolling in a course
                     </p>
                     <Button className="mt-4" asChild>

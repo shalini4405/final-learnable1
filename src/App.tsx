@@ -17,33 +17,36 @@ import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 import ChatbotUI from "./components/AIChatbot/ChatbotUI";
 import { ChatbotProvider } from "./hooks/use-chatbot";
+import { UserProvider } from "./contexts/UserContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <ChatbotProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/courses" element={<CoursesPage />} />
-              <Route path="/roadmap" element={<RoadmapPage />} />
-              <Route path="/leaderboard" element={<LeaderboardPage />} />
-              <Route path="/hackbuddies" element={<HackBuddiesPage />} />
-              <Route path="/skill-graph" element={<SkillGraphPage />} />
-              <Route path="/resources" element={<ResourcesPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-            </Route>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <ChatbotUI />
-        </BrowserRouter>
-      </ChatbotProvider>
+      <UserProvider>
+        <ChatbotProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/courses" element={<CoursesPage />} />
+                <Route path="/roadmap" element={<RoadmapPage />} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/hackbuddies" element={<HackBuddiesPage />} />
+                <Route path="/skill-graph" element={<SkillGraphPage />} />
+                <Route path="/resources" element={<ResourcesPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+              </Route>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <ChatbotUI />
+          </BrowserRouter>
+        </ChatbotProvider>
+      </UserProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
