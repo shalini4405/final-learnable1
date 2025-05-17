@@ -11,6 +11,9 @@ import { toast } from "@/hooks/use-toast";
 import SkillBadge from "@/components/courses/SkillBadge";
 import CourseProgress from "@/components/courses/CourseProgress";
 import FreeCertifications from "@/components/courses/FreeCertifications";
+import TimeManagement from "@/components/courses/TimeManagement";
+import { CareerPathsAndResources } from "@/components/courses/CareerPathsAndResources";
+import { useUser } from "@/contexts/UserContext";
 
 // Sample lesson content data for the different difficulty levels
 const courseContentData = {
@@ -1390,6 +1393,7 @@ const CourseContent = ({ course }: { course: Course }) => {
   const [selectedLesson, setSelectedLesson] = useState<number | null>(null);
   const [totalTimeSpent, setTotalTimeSpent] = useState<number>(0);
   const [showBadge, setShowBadge] = useState<boolean>(false);
+  const { user } = useUser();
   
   // Get content based on course level
   const getLessonContent = () => {
@@ -1425,10 +1429,18 @@ const CourseContent = ({ course }: { course: Course }) => {
   
   const handleLessonSelect = (lessonId: number) => {
     setSelectedLesson(lessonId);
+    // Save current lesson to localStorage
+    localStorage.setItem(`course_${course.id}_current_lesson`, lessonId.toString());
     toast({
       title: "Lesson started",
       description: `You're now viewing ${lessons.find(l => l.id === lessonId)?.title || "a lesson"}`
     });
+  };
+
+  const handleBackToLessons = () => {
+    setSelectedLesson(null);
+    // Clear current lesson from localStorage
+    localStorage.removeItem(`course_${course.id}_current_lesson`);
   };
 
   const handleTimeUpdate = (seconds: number) => {
@@ -1442,6 +1454,14 @@ const CourseContent = ({ course }: { course: Course }) => {
     setShowBadge(false);
     localStorage.setItem(`course_${course.id}_badge_shown`, "true");
   };
+
+  // Load current lesson from localStorage on mount
+  useEffect(() => {
+    const currentLesson = localStorage.getItem(`course_${course.id}_current_lesson`);
+    if (currentLesson) {
+      setSelectedLesson(parseInt(currentLesson));
+    }
+  }, [course.id]);
 
   return (
     <div className="space-y-6">
@@ -1499,7 +1519,7 @@ const CourseContent = ({ course }: { course: Course }) => {
         <div className="space-y-4">
           <Button 
             variant="outline" 
-            onClick={() => setSelectedLesson(null)}
+            onClick={handleBackToLessons}
             className="mb-4"
           >
             ← Back to Lesson List
@@ -1573,7 +1593,6 @@ const CoursesPage = () => {
     course.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Different views based on tab selection
   const getCoursesByTab = (): Course[] => {
     switch(currentTab) {
       case "beginner":
@@ -1582,10 +1601,26 @@ const CoursesPage = () => {
         return filteredCourses.filter(course => course.level === "Intermediate");
       case "advanced":
         return filteredCourses.filter(course => course.level === "Advanced");
+      case "life-sciences":
+        return filteredCourses.filter(course => course.id.startsWith("ls"));
+      case "mathematics":
+        return filteredCourses.filter(course => course.id.startsWith("m"));
+      case "business":
+        return filteredCourses.filter(course => course.id.startsWith("b"));
+      case "speaking":
+        return filteredCourses.filter(course => course.id.startsWith("ps"));
       case "for-you":
       default:
         return filteredCourses;
     }
+  };
+
+  const getCourseCategory = (courseId: string): "business" | "science" | "mathematics" | "speaking" => {
+    if (courseId.startsWith("b")) return "business";
+    if (courseId.startsWith("ls")) return "science";
+    if (courseId.startsWith("m")) return "mathematics";
+    if (courseId.startsWith("ps")) return "speaking";
+    return "business"; // default fallback
   };
 
   const handleBackToList = () => {
@@ -1597,7 +1632,7 @@ const CoursesPage = () => {
       <div>
         <h1 className="text-3xl font-bold">Courses</h1>
         <p className="text-gray-600 mt-2">
-          Improve your design skills through interactive, hands-on professional courses.
+          Explore our diverse range of courses in business, public speaking, life sciences, and mathematics.
         </p>
       </div>
       
@@ -1636,6 +1671,11 @@ const CoursesPage = () => {
             
             <div className="space-y-6">
               <CourseProgress course={selectedCourse} />
+              <TimeManagement course={selectedCourse} />
+              <CareerPathsAndResources 
+                course={selectedCourse}
+                category={getCourseCategory(selectedCourse.id)}
+              />
             </div>
           </div>
         </div>
@@ -1650,6 +1690,10 @@ const CoursesPage = () => {
             >
               <TabsList>
                 <TabsTrigger value="for-you">For You</TabsTrigger>
+                <TabsTrigger value="business">Business</TabsTrigger>
+                <TabsTrigger value="speaking">Public Speaking</TabsTrigger>
+                <TabsTrigger value="life-sciences">Life Sciences</TabsTrigger>
+                <TabsTrigger value="mathematics">Mathematics</TabsTrigger>
                 <TabsTrigger value="beginner">Beginner</TabsTrigger>
                 <TabsTrigger value="intermediate">Intermediate</TabsTrigger>
                 <TabsTrigger value="advanced">Advanced</TabsTrigger>

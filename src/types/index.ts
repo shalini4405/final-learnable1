@@ -17,6 +17,7 @@ export interface Course {
     date: string;
     minutesSpent: number;
   }[];
+  careerPaths?: string[];
 }
 
 export interface User {
@@ -61,6 +62,7 @@ export interface Resource {
   type: "video" | "article" | "documentation";
   url: string;
   content?: string;
+  description: string;
 }
 
 export interface Quiz {
@@ -122,4 +124,12 @@ export interface CustomCourseRequest {
   status: "pending" | "approved" | "rejected";
   requestDate: string;
   additionalNotes?: string;
+}
+
+export interface CareerPath {
+  title: string;
+  description: string;
+  requiredCourses: string[];
+  averageSalary: string;
+  skills: string[];
 }

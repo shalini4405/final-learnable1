@@ -9,6 +9,7 @@ import { ArrowRight, BookOpen, Calendar, Clock, Code, FileText, Loader2 } from "
 import { useToast } from "@/components/ui/use-toast";
 import { useUser } from "@/contexts/UserContext";
 import CustomCourseRequest from "@/components/courses/CustomCourseRequest";
+import InteractiveRoadmap from "@/components/InteractiveRoadmap";
 
 const RoadmapPage = () => {
   const [query, setQuery] = useState('');
@@ -28,6 +29,61 @@ const RoadmapPage = () => {
   }>(null);
   
   const { toast } = useToast();
+  
+  const [selectedRoadmap, setSelectedRoadmap] = useState<typeof sampleRoadmaps[0] | null>(null);
+  
+  const roadmapNodes = [
+    {
+      id: 1,
+      x: 100,
+      y: 100,
+      title: "Getting Started",
+      status: "completed" as const,
+      type: "milestone" as const
+    },
+    {
+      id: 2,
+      x: 250,
+      y: 200,
+      title: "Basic Concepts",
+      status: "available" as const,
+      type: "challenge" as const
+    },
+    {
+      id: 3,
+      x: 400,
+      y: 150,
+      title: "First Project",
+      status: "locked" as const,
+      type: "milestone" as const
+    },
+    {
+      id: 4,
+      x: 550,
+      y: 250,
+      title: "Knowledge Check",
+      status: "locked" as const,
+      type: "quiz" as const
+    },
+    {
+      id: 5,
+      x: 700,
+      y: 150,
+      title: "Advanced Topics",
+      status: "locked" as const,
+      type: "milestone" as const
+    }
+  ];
+
+  const handleNodeClick = (node: any) => {
+    if (node.status === 'locked') return;
+    
+    toast({
+      title: `${node.title}`,
+      description: `Starting ${node.type}: ${node.title}`,
+    });
+    // Here you would typically navigate to the specific content or show a modal
+  };
   
   // Calculate roadmap progress based on user's completed milestones
   const calculateRoadmapProgress = (roadmapId: number) => {
@@ -173,6 +229,7 @@ const RoadmapPage = () => {
         <TabsList>
           <TabsTrigger value="roadmaps">My Roadmaps</TabsTrigger>
           <TabsTrigger value="generate">Generate New</TabsTrigger>
+          <TabsTrigger value="interactive">Interactive View</TabsTrigger>
           {generatedRoadmap && <TabsTrigger value="view">View Generated</TabsTrigger>}
         </TabsList>
         
@@ -237,6 +294,24 @@ const RoadmapPage = () => {
         
         <TabsContent value="generate" className="mt-6">
           <CustomCourseRequest onRequestComplete={handleCustomRoadmapComplete} />
+        </TabsContent>
+        
+        <TabsContent value="interactive" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Interactive Learning Path</CardTitle>
+              <CardDescription>
+                Follow your personalized learning journey through interactive milestones
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <InteractiveRoadmap
+                nodes={roadmapNodes}
+                onNodeClick={handleNodeClick}
+                currentProgress={30}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
         
         {generatedRoadmap && (
