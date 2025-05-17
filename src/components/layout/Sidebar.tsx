@@ -17,13 +17,13 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 h-screen bg-white border-r border-gray-200 sticky top-0">
-      <div className="flex items-center h-16 px-6 border-b border-gray-200">
+    <aside className="hidden md:flex flex-col w-64 h-screen bg-background border-r border-border sticky top-0">
+      <div className="flex items-center h-16 px-6 border-b border-border">
         <Link to="/" className="flex items-center gap-2 font-bold text-xl">
           <div className="flex items-center justify-center w-8 h-8 rounded bg-primary text-white">
             <span>LA</span>
           </div>
-          <span>SkillSprint</span>
+          <span>LearnAble</span>
         </Link>
       </div>
       <nav className="flex-1 p-4 space-y-1">
@@ -35,7 +35,7 @@ export function Sidebar() {
               "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium",
               pathname === item.path
                 ? "bg-primary/10 text-primary"
-                : "text-gray-600 hover:bg-gray-100"
+                : "text-foreground/80 hover:bg-muted"
             )}
           >
             <item.icon className="w-5 h-5" />
@@ -43,13 +43,13 @@ export function Sidebar() {
           </Link>
         ))}
       </nav>
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-border">
         <Link 
           to="/profile" 
-          className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100"
+          className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-foreground/80 hover:bg-muted"
         >
-          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-            <span className="text-gray-500">U</span>
+          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+            <span className="text-foreground/70">U</span>
           </div>
           <span>Profile</span>
         </Link>
