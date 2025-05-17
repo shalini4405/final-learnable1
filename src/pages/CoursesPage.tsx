@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, CheckCircle } from "lucide-react";
+import { Search, CheckCircle, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import FreeCertificateCourses from "@/components/courses/FreeCertificateCourses"
 import CustomCourseRequest from "@/components/courses/CustomCourseRequest";
 import InteractiveRoadmap from "@/components/InteractiveRoadmap";
 import { useToast } from "@/components/ui/use-toast";
+import PaymentPrompt from "@/components/courses/PaymentPrompt";
 
 interface RoadmapNode {
   id: number;
@@ -1419,6 +1420,7 @@ const CourseContent = ({ course }: { course: Course }) => {
   const [selectedLesson, setSelectedLesson] = useState<number | null>(null);
   const [totalTimeSpent, setTotalTimeSpent] = useState<number>(0);
   const [showBadge, setShowBadge] = useState<boolean>(false);
+  const [showPaymentPrompt, setShowPaymentPrompt] = useState<boolean>(false);
   const { user } = useUser();
   
   // Get content based on course level
@@ -1437,6 +1439,16 @@ const CourseContent = ({ course }: { course: Course }) => {
     localStorage.getItem(`course_${course.id}_lesson_${lesson.id}_quiz`) === "completed"
   );
 
+  // Check if lesson requires payment
+  const isLessonLocked = (lessonId: number) => {
+    // First two lessons are free
+    if (lessonId <= 2) return false;
+    
+    // Check if payment is made for this lesson set
+    const paymentMade = localStorage.getItem(`course_${course.id}_payment_${Math.floor((lessonId - 1) / 2)}`);
+    return !paymentMade;
+  };
+
   useEffect(() => {
     // Load total time spent on this course from localStorage
     const savedTotalTime = localStorage.getItem(`course_${course.id}_total_time`);
@@ -1454,13 +1466,29 @@ const CourseContent = ({ course }: { course: Course }) => {
   }, [course.id, allLessonsCompleted]);
   
   const handleLessonSelect = (lessonId: number) => {
+    if (isLessonLocked(lessonId)) {
+      setShowPaymentPrompt(true);
+      return;
+    }
+    
     setSelectedLesson(lessonId);
-    // Save current lesson to localStorage
     localStorage.setItem(`course_${course.id}_current_lesson`, lessonId.toString());
     toast({
       title: "Lesson started",
       description: `You're now viewing ${lessons.find(l => l.id === lessonId)?.title || "a lesson"}`
     });
+  };
+
+  const handlePaymentComplete = () => {
+    // Save payment status for current lesson set
+    const currentSet = Math.floor((selectedLesson || 3) / 2);
+    localStorage.setItem(`course_${course.id}_payment_${currentSet}`, 'true');
+    setShowPaymentPrompt(false);
+    
+    // Continue to the selected lesson
+    if (selectedLesson) {
+      handleLessonSelect(selectedLesson);
+    }
   };
 
   const handleBackToLessons = () => {
@@ -1491,6 +1519,13 @@ const CourseContent = ({ course }: { course: Course }) => {
 
   return (
     <div className="space-y-6">
+      {showPaymentPrompt && (
+        <PaymentPrompt
+          onPaymentComplete={handlePaymentComplete}
+          onCancel={() => setShowPaymentPrompt(false)}
+        />
+      )}
+      
       {showBadge && allLessonsCompleted && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="max-w-md w-full">
@@ -1569,14 +1604,17 @@ const CourseContent = ({ course }: { course: Course }) => {
           <h3 className="text-lg font-medium">Course Materials</h3>
           <div className="grid gap-3">
             {lessons.map((lesson) => {
-              // Check if quiz is completed for this lesson
               const isCompleted = localStorage.getItem(`course_${course.id}_lesson_${lesson.id}_quiz`) === "completed";
+              const isLocked = isLessonLocked(lesson.id);
               
               return (
-                <Card key={lesson.id} className="bg-white">
+                <Card key={lesson.id} className={`bg-white ${isLocked ? 'opacity-75' : ''}`}>
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-center">
-                      <CardTitle className="text-base">{lesson.title}</CardTitle>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        {isLocked && <Lock className="h-4 w-4" />}
+                        {lesson.title}
+                      </CardTitle>
                       {isCompleted && (
                         <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
                           Completed
@@ -1588,15 +1626,20 @@ const CourseContent = ({ course }: { course: Course }) => {
                     <p className="text-sm text-gray-600">
                       {course.title} - Lesson {lesson.id}
                     </p>
+                    {isLocked && (
+                      <p className="text-sm text-amber-600 mt-2">
+                        Unlock this lesson for ₹49
+                      </p>
+                    )}
                   </CardContent>
                   <CardFooter>
                     <Button 
                       onClick={() => handleLessonSelect(lesson.id)}
-                      variant="outline" 
+                      variant={isLocked ? "secondary" : "outline"}
                       size="sm" 
                       className="w-full"
                     >
-                      {isCompleted ? "Review Lesson" : "Start Lesson"}
+                      {isLocked ? 'Unlock Lesson' : isCompleted ? 'Review Lesson' : 'Start Lesson'}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -1611,7 +1654,7 @@ const CourseContent = ({ course }: { course: Course }) => {
 
 const CoursesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [currentTab, setCurrentTab] = useState("for-you");
+  const [currentTab, setCurrentTab] = useState("my-courses");
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [generatedRoadmap, setGeneratedRoadmap] = useState<GeneratedRoadmap | null>(null);
   const { user } = useUser();
@@ -1627,6 +1670,11 @@ const CoursesPage = () => {
     if (courseId.startsWith("ls")) return "science";
     if (courseId.startsWith("m")) return "mathematics";
     return "speaking"; // default fallback
+  };
+
+  const handleCourseSelect = (course: Course) => {
+    setSelectedCourse(course);
+    setCurrentTab("my-courses");
   };
 
   const handleBackToList = () => {
@@ -1698,7 +1746,7 @@ const CoursesPage = () => {
         </p>
       </div>
       
-      <Tabs defaultValue="my-courses">
+      <Tabs value={currentTab} onValueChange={setCurrentTab}>
         <TabsList>
           <TabsTrigger value="my-courses">My Courses</TabsTrigger>
           <TabsTrigger value="certificates">Free Certificates</TabsTrigger>
@@ -1709,7 +1757,16 @@ const CoursesPage = () => {
         <TabsContent value="my-courses" className="space-y-6">
           {selectedCourse ? (
             <div className="grid gap-6 lg:grid-cols-2">
-              <CourseContent course={selectedCourse} />
+              <div>
+                <Button 
+                  variant="outline" 
+                  onClick={handleBackToList}
+                  className="mb-4"
+                >
+                  ← Back to Course List
+                </Button>
+                <CourseContent course={selectedCourse} />
+              </div>
               <div className="space-y-6">
                 <CourseProgress course={selectedCourse} />
                 <TimeManagement course={selectedCourse} />
@@ -1720,8 +1777,44 @@ const CoursesPage = () => {
               </div>
             </div>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-lg text-gray-600">Select a course to start learning</p>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredCourses.map((course) => (
+                <Card key={course.id} className="bg-white">
+                  <CardHeader className="pb-2">
+                    <CardTitle>{course.title}</CardTitle>
+                    <CardDescription>{course.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <span>{course.totalLessons} lessons</span>
+                      <span>•</span>
+                      <span>{course.level}</span>
+                    </div>
+                    {course.progress > 0 && (
+                      <div className="mt-4 space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>Progress</span>
+                          <span>{course.progress}%</span>
+                        </div>
+                        <div className="h-2 bg-gray-100 rounded-full">
+                          <div
+                            className="h-full bg-primary rounded-full"
+                            style={{ width: `${course.progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      onClick={() => handleCourseSelect(course)} 
+                      className="w-full"
+                    >
+                      {course.progress > 0 ? 'Continue Course' : 'Start Course'}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
             </div>
           )}
         </TabsContent>
