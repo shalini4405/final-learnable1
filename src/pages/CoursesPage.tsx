@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { Search } from "lucide-react";
+import { Search, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,8 @@ import { Course } from "@/types";
 import LessonContent from "@/components/courses/LessonContent";
 import { toast } from "@/hooks/use-toast";
 import SkillBadge from "@/components/courses/SkillBadge";
+import CourseProgress from "@/components/courses/CourseProgress";
+import FreeCertifications from "@/components/courses/FreeCertifications";
 
 // Sample lesson content data for the different difficulty levels
 const courseContentData = {
@@ -35,7 +36,8 @@ const courseContentData = {
         {
           title: "Design Fundamentals Video",
           type: "video" as const,
-          content: "<p>This comprehensive video walks through the basic principles of design with visual examples.</p>"
+          content: "<p>This comprehensive video walks through the basic principles of design with visual examples.</p>",
+          url: "https://www.youtube.com/watch?v=a5KYlHNKQB8"
         },
         {
           title: "Elements of Design",
@@ -788,14 +790,15 @@ const courseContentData = {
       `,
       resources: [
         {
+          title: "IA Visualization Techniques",
+          type: "video" as const,
+          content: "<p>Learn various methods for visualizing information architecture, including sitemaps, wireflows, and concept models.</p>",
+          url: "https://www.youtube.com/watch?v=TZe0gXnxhAo"
+        },
+        {
           title: "Card Sorting for IA Research",
           type: "article" as const,
           content: "<p>A guide to conducting card sorting exercises to inform your information architecture decisions.</p>"
-        },
-        {
-          title: "IA Visualization Techniques",
-          type: "video" as const,
-          content: "<p>Learn various methods for visualizing information architecture, including sitemaps, wireflows, and concept models.</p>"
         }
       ],
       quizQuestions: [
@@ -1102,7 +1105,8 @@ const courseContentData = {
         {
           title: "Microinteractions: Designing with Details",
           type: "video" as const,
-          content: "<p>A detailed walkthrough of how to design effective microinteractions that enhance usability and delight.</p>"
+          content: "<p>A detailed walkthrough of how to design effective microinteractions that enhance usability and delight.</p>",
+          url: "https://www.youtube.com/watch?v=wHjf5LGUNzs"
         },
         {
           title: "Animation Principles for UX",
@@ -1421,7 +1425,6 @@ const CourseContent = ({ course }: { course: Course }) => {
   
   const handleLessonSelect = (lessonId: number) => {
     setSelectedLesson(lessonId);
-    // Notify user they've started a lesson
     toast({
       title: "Lesson started",
       description: `You're now viewing ${lessons.find(l => l.id === lessonId)?.title || "a lesson"}`
@@ -1505,7 +1508,7 @@ const CourseContent = ({ course }: { course: Course }) => {
           {lessons.filter(lesson => lesson.id === selectedLesson).map((lesson) => (
             <LessonContent
               key={lesson.id}
-              courseId={course.id}
+              course={course}
               lessonId={lesson.id}
               title={lesson.title}
               content={lesson.content}
@@ -1608,25 +1611,33 @@ const CoursesPage = () => {
             ← Back to Course List
           </Button>
           
-          <div className="flex items-start gap-4 mb-6">
-            <div className="flex items-center justify-center w-12 h-12 rounded bg-primary/10 text-primary font-medium">
-              {selectedCourse.shortCode}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="flex items-center justify-center w-12 h-12 rounded bg-primary/10 text-primary font-medium">
+                  {selectedCourse.shortCode}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">{selectedCourse.title}</h2>
+                  <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm ${
+                    selectedCourse.level === "Beginner" 
+                      ? "bg-green-100 text-green-800" 
+                      : selectedCourse.level === "Intermediate"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                  }`}>
+                    {selectedCourse.level}
+                  </span>
+                </div>
+              </div>
+
+              <CourseContent course={selectedCourse} />
             </div>
-            <div>
-              <h2 className="text-2xl font-bold">{selectedCourse.title}</h2>
-              <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm ${
-                selectedCourse.level === "Beginner" 
-                  ? "bg-green-100 text-green-800" 
-                  : selectedCourse.level === "Intermediate"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : "bg-red-100 text-red-800"
-              }`}>
-                {selectedCourse.level}
-              </span>
+            
+            <div className="space-y-6">
+              <CourseProgress course={selectedCourse} />
             </div>
           </div>
-
-          <CourseContent course={selectedCourse} />
         </div>
       ) : (
         <>
@@ -1702,6 +1713,10 @@ const CoursesPage = () => {
               <p className="text-gray-500">Try adjusting your search or filters</p>
             </div>
           )}
+
+          <div className="mt-12 pt-12 border-t">
+            <FreeCertifications />
+          </div>
         </>
       )}
     </div>

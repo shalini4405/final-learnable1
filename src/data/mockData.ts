@@ -1,4 +1,3 @@
-
 import { Course, User, Hackathon } from "@/types";
 
 export const courses: Course[] = [
@@ -9,10 +8,14 @@ export const courses: Course[] = [
     description: "Master the fundamentals of UX design.",
     level: "Beginner",
     icon: "UX",
-    progress: 19,
+    progress: 0,
     totalHours: 5,
     completedHours: 0,
-    isRecommended: true
+    isRecommended: true,
+    dailyTargetMinutes: 60,
+    startDate: new Date().toISOString(),
+    endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days from now
+    dailyProgress: []
   },
   {
     id: "2",
@@ -23,7 +26,11 @@ export const courses: Course[] = [
     icon: "DT",
     progress: 0,
     totalHours: 3,
-    completedHours: 0
+    completedHours: 0,
+    dailyTargetMinutes: 90,
+    startDate: new Date().toISOString(),
+    endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+    dailyProgress: []
   },
   {
     id: "3",
@@ -75,11 +82,11 @@ export const currentUser: User = {
   id: "1",
   name: "John Doe",
   email: "john@example.com",
-  points: 45,
-  streak: 3,
+  points: 0,
+  streak: 0,
   lastActive: new Date().toISOString(),
-  coursesEnrolled: ["1", "3"],
-  completedLevels: ["1-1"]
+  coursesEnrolled: [],
+  completedLevels: []
 };
 
 export const topUsers: User[] = [

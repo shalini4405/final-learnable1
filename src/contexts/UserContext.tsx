@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { LevelStatusMap } from "@/types";
 
@@ -10,7 +9,13 @@ interface User {
   bio?: string;
   points: number;
   streak: number;
+  lastActive: string;
   isLoggedIn: boolean;
+  coursesEnrolled: string[];
+  completedLevels: string[];
+  interests?: string[];
+  experienceLevel?: 'beginner' | 'intermediate' | 'advanced';
+  hasCompletedCustomization?: boolean;
 }
 
 interface UserContextType {
@@ -24,6 +29,7 @@ interface UserContextType {
   updateLevelStatus: (level: string, status: { completed?: boolean; paid?: boolean }) => void;
   isLevelAccessible: (level: string) => boolean;
   initiatePayment: (level: string, amount: number) => Promise<boolean>;
+  updateLastActive: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -41,16 +47,43 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      const parsedUser = JSON.parse(storedUser);
+      
+      // Check if streak should be updated or reset
+      const lastActive = new Date(parsedUser.lastActive);
+      const now = new Date();
+      const daysSinceActive = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysSinceActive === 0) {
+        // Already active today, keep current streak
+        setUser(parsedUser);
+      } else if (daysSinceActive === 1) {
+        // Active yesterday, increment streak
+        const updatedUser = {
+          ...parsedUser,
+          streak: parsedUser.streak + 1,
+          lastActive: now.toISOString()
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      } else {
+        // More than a day gap, reset streak
+        const updatedUser = {
+          ...parsedUser,
+          streak: 0,
+          lastActive: now.toISOString()
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
     }
     
-    // Initialize dark mode from localStorage
+    // Initialize dark mode and level status...
     const storedDarkMode = localStorage.getItem("darkMode");
     if (storedDarkMode) {
       setIsDarkMode(storedDarkMode === "true");
     }
     
-    // Initialize level status from localStorage
     const storedLevelStatus = localStorage.getItem("levelStatus");
     if (storedLevelStatus) {
       setLevelStatus(JSON.parse(storedLevelStatus));
@@ -148,6 +181,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
+  // Update lastActive timestamp whenever user interacts
+  const updateLastActive = () => {
+    if (user) {
+      const now = new Date();
+      const updatedUser = {
+        ...user,
+        lastActive: now.toISOString()
+      };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    }
+  };
+  
   return (
     <UserContext.Provider value={{ 
       user, 
@@ -159,7 +205,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       levelStatus,
       updateLevelStatus,
       isLevelAccessible,
-      initiatePayment
+      initiatePayment,
+      updateLastActive
     }}>
       {children}
     </UserContext.Provider>

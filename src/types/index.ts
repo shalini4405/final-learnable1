@@ -1,4 +1,3 @@
-
 export interface Course {
   id: string;
   title: string;
@@ -10,6 +9,14 @@ export interface Course {
   totalHours?: number;
   completedHours?: number;
   isRecommended?: boolean;
+  isCustom?: boolean;
+  startDate?: string;
+  endDate?: string;
+  dailyTargetMinutes?: number;
+  dailyProgress?: {
+    date: string;
+    minutesSpent: number;
+  }[];
 }
 
 export interface User {
@@ -21,6 +28,10 @@ export interface User {
   lastActive: string;
   coursesEnrolled: string[];
   completedLevels: string[];
+  interests?: string[];
+  experienceLevel?: 'beginner' | 'intermediate' | 'advanced';
+  hasCompletedCustomization?: boolean;
+  isLoggedIn?: boolean;
 }
 
 export interface Hackathon {
@@ -99,4 +110,16 @@ export interface LevelStatus {
 
 export interface LevelStatusMap {
   [key: string]: LevelStatus;
+}
+
+export interface CustomCourseRequest {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  requestedLevel: "Beginner" | "Intermediate" | "Advanced";
+  topics: string[];
+  status: "pending" | "approved" | "rejected";
+  requestDate: string;
+  additionalNotes?: string;
 }

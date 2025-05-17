@@ -7,11 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { ArrowRight, BookOpen, Calendar, Clock, Code, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useUser } from "@/contexts/UserContext";
+import CustomCourseRequest from "@/components/courses/CustomCourseRequest";
 
 const RoadmapPage = () => {
   const [query, setQuery] = useState('');
   const [generating, setGenerating] = useState(false);
   const [currentTab, setCurrentTab] = useState('roadmaps');
+  const { user } = useUser();
   const [generatedRoadmap, setGeneratedRoadmap] = useState<null | {
     title: string;
     description: string;
@@ -26,6 +29,15 @@ const RoadmapPage = () => {
   
   const { toast } = useToast();
   
+  // Calculate roadmap progress based on user's completed milestones
+  const calculateRoadmapProgress = (roadmapId: number) => {
+    if (!user) return 0;
+    
+    // In a real app, this would check the user's actual completed milestones
+    // For now, return 0 for new users
+    return 0;
+  };
+  
   const sampleRoadmaps = [
     {
       id: 1,
@@ -33,7 +45,7 @@ const RoadmapPage = () => {
       description: "Master modern frontend development with React, TypeScript, and more",
       milestones: 8,
       totalHours: 120,
-      progress: 25
+      progress: calculateRoadmapProgress(1)
     },
     {
       id: 2,
@@ -41,7 +53,7 @@ const RoadmapPage = () => {
       description: "Comprehensive path to becoming a full stack developer",
       milestones: 12,
       totalHours: 200,
-      progress: 10
+      progress: calculateRoadmapProgress(2)
     },
     {
       id: 3,
@@ -49,58 +61,37 @@ const RoadmapPage = () => {
       description: "Learn design principles and tools for creating exceptional user experiences",
       milestones: 7,
       totalHours: 90,
-      progress: 0
+      progress: calculateRoadmapProgress(3)
     }
   ];
   
-  const handleGenerateRoadmap = () => {
-    if (!query.trim()) {
-      toast({
-        title: "Please enter a description",
-        description: "Tell us what kind of roadmap you'd like to generate",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+  const handleContinueRoadmap = async (roadmap: typeof sampleRoadmaps[0]) => {
     setGenerating(true);
     
-    // Simulate AI generation
-    setTimeout(() => {
+    // Generate prompt based on user's interests and experience level
+    const prompt = `Create a detailed learning roadmap for ${roadmap.title} 
+    tailored for a ${user?.experienceLevel || 'beginner'} developer 
+    with interests in ${user?.interests?.join(', ')}. 
+    Include specific milestones and resources.`;
+
+    try {
+      // Simulate AI generation (in a real app, this would call an AI service)
       const newRoadmap = {
-        title: `${query} Roadmap`,
-        description: `A customized learning path for ${query}`,
+        title: roadmap.title,
+        description: roadmap.description,
         milestones: [
           {
             id: 1,
-            title: "Getting Started",
-            description: "Learn the fundamentals and set up your environment",
+            title: "Foundation Concepts",
+            description: `Essential ${roadmap.title} concepts for ${user?.experienceLevel} level`,
             resources: [
               { 
-                title: "Introduction to the field", 
-                type: "article",
-                url: "#" 
-              },
-              { 
-                title: "Setting up your workspace", 
-                type: "video",
-                url: "#" 
-              }
-            ],
-            timeEstimate: "1-2 weeks"
-          },
-          {
-            id: 2,
-            title: "Core Concepts",
-            description: "Master the essential theories and practices",
-            resources: [
-              { 
-                title: "Core principles deep dive", 
+                title: "Getting Started Guide", 
                 type: "documentation",
                 url: "#" 
               },
               { 
-                title: "Practical exercises", 
+                title: "Interactive Tutorial", 
                 type: "video",
                 url: "#" 
               }
@@ -108,34 +99,65 @@ const RoadmapPage = () => {
             timeEstimate: "2-3 weeks"
           },
           {
-            id: 3,
-            title: "Advanced Topics",
-            description: "Deepen your knowledge with specialized topics",
+            id: 2,
+            title: "Building Real Projects",
+            description: "Apply your knowledge through practical projects",
             resources: [
               { 
-                title: "Advanced techniques", 
-                type: "article",
+                title: "Project Workshop", 
+                type: "video",
                 url: "#" 
               },
               { 
-                title: "Case studies", 
-                type: "documentation",
+                title: "Best Practices Guide", 
+                type: "article",
                 url: "#" 
               }
             ],
             timeEstimate: "3-4 weeks"
+          },
+          {
+            id: 3,
+            title: "Advanced Concepts",
+            description: "Master advanced techniques and patterns",
+            resources: [
+              { 
+                title: "Advanced Topics Deep Dive", 
+                type: "documentation",
+                url: "#" 
+              },
+              { 
+                title: "Expert Interviews", 
+                type: "video",
+                url: "#" 
+              }
+            ],
+            timeEstimate: "4-5 weeks"
           }
         ]
       };
       
       setGeneratedRoadmap(newRoadmap);
       setGenerating(false);
+      setCurrentTab('view');
       
       toast({
         title: "Roadmap generated!",
         description: "Your personalized learning path is ready",
       });
-    }, 2000);
+    } catch (error) {
+      setGenerating(false);
+      toast({
+        title: "Error generating roadmap",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleCustomRoadmapComplete = (roadmap: any) => {
+    setGeneratedRoadmap(roadmap);
+    setCurrentTab('view');
   };
   
   return (
@@ -189,83 +211,32 @@ const RoadmapPage = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-500">Not started yet</div>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleContinueRoadmap(roadmap)}
+                      disabled={generating}
+                    >
+                      {generating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          Start Learning
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
                   )}
                 </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full flex items-center gap-2">
-                    Continue <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </CardFooter>
               </Card>
             ))}
           </div>
         </TabsContent>
         
         <TabsContent value="generate" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Generate a Custom Roadmap</CardTitle>
-              <CardDescription>
-                Describe your goals and our AI will create a personalized learning path
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-1">
-                <label htmlFor="query" className="text-sm font-medium">
-                  What do you want to learn?
-                </label>
-                <Textarea
-                  id="query"
-                  placeholder="e.g., I want to become a machine learning engineer with a focus on NLP"
-                  className="min-h-[120px]"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button 
-                onClick={handleGenerateRoadmap} 
-                disabled={generating}
-              >
-                {generating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>Generate Roadmap</>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-          
-          <div className="mt-6">
-            <h3 className="text-lg font-medium mb-3">Example Prompts</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="cursor-pointer hover:bg-gray-50"
-                onClick={() => setQuery("I want to learn frontend development with React and TypeScript")}
-              >
-                <CardContent className="p-4">
-                  <div className="flex gap-3">
-                    <Code className="h-5 w-5 text-primary" />
-                    <p className="text-sm">I want to learn frontend development with React and TypeScript</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="cursor-pointer hover:bg-gray-50"
-                onClick={() => setQuery("Help me build a career path for UX/UI design")}
-              >
-                <CardContent className="p-4">
-                  <div className="flex gap-3">
-                    <FileText className="h-5 w-5 text-primary" />
-                    <p className="text-sm">Help me build a career path for UX/UI design</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          <CustomCourseRequest onRequestComplete={handleCustomRoadmapComplete} />
         </TabsContent>
         
         {generatedRoadmap && (
@@ -273,67 +244,55 @@ const RoadmapPage = () => {
             <Card>
               <CardHeader>
                 <CardTitle>{generatedRoadmap.title}</CardTitle>
-                <CardDescription>
-                  {generatedRoadmap.description}
-                </CardDescription>
+                <CardDescription>{generatedRoadmap.description}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
                   {generatedRoadmap.milestones.map((milestone) => (
-                    <div key={milestone.id} className="border rounded-lg p-4 space-y-3">
+                    <div key={milestone.id} className="space-y-4">
                       <div>
-                        <h3 className="font-medium">Milestone {milestone.id}: {milestone.title}</h3>
-                        <p className="text-sm text-gray-600">{milestone.description}</p>
+                        <h3 className="text-lg font-semibold">{milestone.title}</h3>
+                        <p className="text-gray-600">{milestone.description}</p>
                       </div>
-                      <Separator />
-                      <div>
-                        <h4 className="text-sm font-medium mb-2">Resources:</h4>
-                        <ul className="space-y-2">
-                          {milestone.resources.map((resource, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm">
-                              {resource.type === 'video' && (
-                                <div className="mt-0.5 text-red-500 bg-red-50 p-1 rounded">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m10 9 5 3-5 3Z"/><circle cx="12" cy="12" r="10"/></svg>
-                                </div>
-                              )}
-                              {resource.type === 'article' && (
-                                <div className="mt-0.5 text-blue-500 bg-blue-50 p-1 rounded">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-                                </div>
-                              )}
-                              {resource.type === 'documentation' && (
-                                <div className="mt-0.5 text-green-500 bg-green-50 p-1 rounded">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                                </div>
-                              )}
-                              <a href={resource.url} className="text-primary hover:underline">
-                                {resource.title}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
+                      
+                      <div className="grid gap-4">
+                        {milestone.resources.map((resource, idx) => (
+                          <a
+                            key={idx}
+                            href={resource.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                          >
+                            {resource.type === 'documentation' ? (
+                              <FileText className="h-5 w-5 text-gray-500 mr-3" />
+                            ) : resource.type === 'video' ? (
+                              <BookOpen className="h-5 w-5 text-gray-500 mr-3" />
+                            ) : (
+                              <Code className="h-5 w-5 text-gray-500 mr-3" />
+                            )}
+                            <div>
+                              <div className="font-medium">{resource.title}</div>
+                              <div className="text-sm text-gray-500 capitalize">
+                                {resource.type}
+                              </div>
+                            </div>
+                          </a>
+                        ))}
                       </div>
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-500 flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                          {milestone.timeEstimate}
-                        </div>
-                        <Button variant="outline" size="sm" className="flex items-center gap-1">
-                          <BookOpen className="h-3 w-3" /> Start
-                        </Button>
+                      
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Clock className="h-4 w-4 mr-2" />
+                        Estimated time: {milestone.timeEstimate}
                       </div>
+                      
+                      {milestone.id !== generatedRoadmap.milestones.length && (
+                        <Separator className="my-6" />
+                      )}
                     </div>
                   ))}
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => setCurrentTab('generate')}>
-                  Regenerate
-                </Button>
-                <Button>
-                  Save Roadmap
-                </Button>
-              </CardFooter>
             </Card>
           </TabsContent>
         )}
