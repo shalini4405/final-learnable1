@@ -40,6 +40,8 @@ export interface Level {
   resources: Resource[];
   quiz: Quiz;
   order: number;
+  price?: number;
+  isPaid: boolean;
 }
 
 export interface Resource {
@@ -88,4 +90,13 @@ export interface SkillArea {
   name: string;
   value: number;
   fullMark: number;
+}
+
+export interface LevelStatus {
+  completed: boolean;
+  paid: boolean;
+}
+
+export interface LevelStatusMap {
+  [key: string]: LevelStatus;
 }

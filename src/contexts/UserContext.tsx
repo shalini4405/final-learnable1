@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { LevelStatusMap } from "@/types";
 
 interface User {
   id: string;
@@ -18,6 +19,10 @@ interface UserContextType {
   toggleDarkMode: () => void;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
+  levelStatus: LevelStatusMap;
+  updateLevelStatus: (level: string, status: { completed?: boolean; paid?: boolean }) => void;
+  isLevelAccessible: (level: string) => boolean;
+  initiatePayment: (level: string, amount: number) => Promise<boolean>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -25,6 +30,11 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const [levelStatus, setLevelStatus] = useState<LevelStatusMap>({
+    beginner: { completed: false, paid: true }, // Beginner level is free
+    intermediate: { completed: false, paid: false },
+    advanced: { completed: false, paid: false }
+  });
   
   // Initialize user from localStorage on mount
   useEffect(() => {
@@ -38,6 +48,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (storedDarkMode) {
       setIsDarkMode(storedDarkMode === "true");
     }
+    
+    // Initialize level status from localStorage
+    const storedLevelStatus = localStorage.getItem("levelStatus");
+    if (storedLevelStatus) {
+      setLevelStatus(JSON.parse(storedLevelStatus));
+    }
   }, []);
   
   // Apply dark mode to document when it changes
@@ -50,6 +66,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     localStorage.setItem("darkMode", isDarkMode.toString());
   }, [isDarkMode]);
+  
+  // Save levelStatus to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem("levelStatus", JSON.stringify(levelStatus));
+  }, [levelStatus]);
   
   const toggleDarkMode = () => {
     setIsDarkMode(prev => !prev);
@@ -67,9 +88,78 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem("user", JSON.stringify(updatedUser));
     setUser(updatedUser);
   };
+
+  const updateLevelStatus = (level: string, status: { completed?: boolean; paid?: boolean }) => {
+    setLevelStatus(prev => {
+      const currentLevelStatus = prev[level] || { completed: false, paid: false };
+      const updatedLevelStatus = {
+        ...currentLevelStatus,
+        ...status
+      };
+      
+      return {
+        ...prev,
+        [level]: updatedLevelStatus
+      };
+    });
+  };
+
+  const isLevelAccessible = (level: string): boolean => {
+    if (level.toLowerCase() === 'beginner') return true;
+    
+    const levels = ['beginner', 'intermediate', 'advanced'];
+    const levelIndex = levels.indexOf(level.toLowerCase());
+    
+    if (levelIndex <= 0) return true; // Beginner is always accessible
+    
+    const previousLevel = levels[levelIndex - 1];
+    // Check if previous level is completed and current level is paid
+    return (
+      levelStatus[previousLevel]?.completed === true && 
+      levelStatus[level.toLowerCase()]?.paid === true
+    );
+  };
+
+  // Mock payment gateway integration
+  const initiatePayment = async (level: string, amount: number): Promise<boolean> => {
+    try {
+      // In a real app, this would be replaced with actual payment gateway integration
+      console.log(`Processing payment of ₹${amount} for ${level} level`);
+
+      // Simulate payment processing with 80% success rate
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const isSuccess = Math.random() < 0.8; // 80% success rate
+          if (isSuccess) {
+            // Mark the level as paid
+            updateLevelStatus(level.toLowerCase(), { paid: true });
+            console.log(`Payment successful for ${level} level`);
+            resolve(true);
+          } else {
+            console.log(`Payment failed for ${level} level`);
+            resolve(false);
+          }
+        }, 1500); // Simulate network delay
+      });
+    } catch (error) {
+      console.error("Payment processing error:", error);
+      return false;
+    }
+  };
   
   return (
-    <UserContext.Provider value={{ user, setUser, isDarkMode, toggleDarkMode, logout, updateUser }}>
+    <UserContext.Provider value={{ 
+      user, 
+      setUser, 
+      isDarkMode, 
+      toggleDarkMode, 
+      logout, 
+      updateUser,
+      levelStatus,
+      updateLevelStatus,
+      isLevelAccessible,
+      initiatePayment
+    }}>
       {children}
     </UserContext.Provider>
   );

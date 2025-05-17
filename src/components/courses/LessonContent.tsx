@@ -4,12 +4,15 @@ import { FileText, BookOpen, FileVideo } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import TimeTracker from "./TimeTracker";
 import Quiz, { QuizQuestion } from "./Quiz";
+import { useUser } from "@/contexts/UserContext";
+import PaymentPrompt from "./PaymentPrompt";
 
 interface LessonContentProps {
   courseId: string;
   lessonId: number;
   title: string;
   content: string;
+  level: "Beginner" | "Intermediate" | "Advanced";
   resources: {
     title: string;
     type: "video" | "article" | "documentation";
@@ -22,14 +25,23 @@ const LessonContent = ({
   courseId, 
   lessonId, 
   title, 
-  content, 
+  content,
+  level,
   resources, 
   quizQuestions 
 }: LessonContentProps) => {
+  const { isLevelAccessible, levelStatus, updateLevelStatus } = useUser();
   const [timeSpent, setTimeSpent] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [quizScore, setQuizScore] = useState(0);
+  const [hasAccess, setHasAccess] = useState(isLevelAccessible(level.toLowerCase()));
 
+  // Get level price based on level name
+  const getLevelPrice = (level: string): number => {
+    if (level.toLowerCase() === "beginner") return 0;
+    return 49; // ₹49 for all other levels
+  };
+  
   // Check if quiz was already completed
   useEffect(() => {
     const completed = localStorage.getItem(`course_${courseId}_lesson_${lessonId}_quiz`);
@@ -39,7 +51,10 @@ const LessonContent = ({
       setQuizCompleted(true);
       setQuizScore(parseInt(savedScore));
     }
-  }, [courseId, lessonId]);
+    
+    // Check if the user has access to this level
+    setHasAccess(isLevelAccessible(level.toLowerCase()));
+  }, [courseId, lessonId, level, isLevelAccessible]);
 
   const handleTimeUpdate = (seconds: number) => {
     setTimeSpent(seconds);
@@ -48,6 +63,11 @@ const LessonContent = ({
   const handleQuizComplete = (score: number) => {
     setQuizCompleted(true);
     setQuizScore(score);
+    
+    // Mark the level as completed if the score is high enough (e.g., > 70%)
+    if (score > 70) {
+      updateLevelStatus(level.toLowerCase(), { completed: true });
+    }
   };
 
   const getIconForResourceType = (type: "video" | "article" | "documentation") => {
@@ -62,6 +82,23 @@ const LessonContent = ({
         return <FileText className="h-5 w-5" />;
     }
   };
+
+  const handleAccessGranted = () => {
+    setHasAccess(true);
+  };
+
+  // If user doesn't have access to this level, show payment prompt
+  if (!hasAccess && level.toLowerCase() !== "beginner") {
+    return (
+      <div className="max-w-md mx-auto my-8">
+        <PaymentPrompt 
+          level={level} 
+          price={getLevelPrice(level)} 
+          onAccessGranted={handleAccessGranted} 
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
