@@ -1511,6 +1511,7 @@ const CourseContent = ({ course }: { course: Course }) => {
               content={lesson.content}
               resources={lesson.resources}
               quizQuestions={lesson.quizQuestions}
+              level={course.level}
             />
           ))}
         </div>
